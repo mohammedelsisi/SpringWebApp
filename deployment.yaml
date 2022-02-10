@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spring-boot-deployment
+  labels:
+    app: spring-boot-deployment-label
+    #deployment specification
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      #this means pods with this label will belong to me
+      app: spring-boot-pods
+      #configuration or blueprint of the pod
+  template:
+    metadata:
+      labels:
+        #this is a required field in pods
+        app: spring-boot-pods
+    spec:
+      containers:
+        - name: spring-boot-contatiner
+          image: web
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+          env:
+          - name: key-02
+            valueFrom:
+              secretKeyRef:
+                name: spring-boot-secret
+                key: secret-key
+          - name: key-03
+            valueFrom:
+              configMapKeyRef:
+                name: spring-boot-config
+                key: config-key
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: spring-boot-service
+spec:
+  type: NodePort
+  selector:
+    app: spring-boot-pods
+  ports:
+    - protocol: TCP
+      #service port
+      port: 8086
+      #pods-port -- container port of deployment
+      targetPort: 8080
+      nodePort: 30880
